@@ -10,14 +10,15 @@ class UsersController < ApplicationController
     :enable_second_factor_totp, :disable_second_factor, :list_second_factors,
     :update_second_factor, :create_second_factor_backup, :select_avatar,
     :notification_level, :revoke_auth_token, :register_second_factor_security_key,
-    :create_second_factor_security_key, :feature_topic, :clear_featured_topic
+    :create_second_factor_security_key, :feature_topic, :clear_featured_topic,
+    :topic_timers
   ]
 
   skip_before_action :check_xhr, only: [
     :show, :badges, :password_reset_show, :password_reset_update, :update, :account_created,
     :activate_account, :perform_account_activation, :user_preferences_redirect, :avatar,
     :my_redirect, :toggle_anon, :admin_login, :confirm_admin, :email_login, :summary,
-    :feature_topic, :clear_featured_topic
+    :feature_topic, :clear_featured_topic, :topic_timers
   ]
 
   before_action :second_factor_check_confirmed_password, only: [
@@ -1335,6 +1336,19 @@ class UsersController < ApplicationController
     guardian.ensure_can_edit!(user)
     user.user_profile.update(featured_topic_id: nil)
     render json: success_json
+  end
+
+  def topic_timers
+    topic_timers = TopicTimer.where(user_id: current_user.id, status_type: 5).joins(:topic).select('topic_timers.*, topics.title')
+
+    respond_to do |format|
+      format.ics do
+        @topic_timers = topic_timers
+      end
+      format.json do
+        render json: topic_timers
+      end
+    end
   end
 
   HONEYPOT_KEY ||= 'HONEYPOT_KEY'

@@ -1,0 +1,14 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Discourse//<%= Discourse.current_hostname %>//NONSGML <%= Discourse.full_version %>//EN
+<% @topic_timers.each do |timer| %>
+BEGIN:VEVENT
+UID:user_topic_timer#<%= timer.id %>@<%= Discourse.current_hostname %>
+DTSTAMP:<%= timer.updated_at.strftime("%Y%m%dT%H%M%SZ") %>
+DTSTART:<%= timer.execute_at.strftime("%Y%m%dT%H%M%SZ") %>
+DTEND:<%= (timer.execute_at + 1.hour).strftime("%Y%m%dT%H%M%SZ") %>
+SUMMARY:<%= timer.title %>
+URL:<%= Discourse.base_url %>/t/-/<%= timer.topic_id %>
+END:VEVENT
+<% end %>
+END:VCALENDAR

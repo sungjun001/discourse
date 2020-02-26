@@ -22,6 +22,8 @@ Discourse::Application.routes.draw do
   post "webhooks/sendgrid" => "webhooks#sendgrid"
   post "webhooks/sparkpost" => "webhooks#sparkpost"
 
+  get "/user-topic-timers" => "users#topic_timers", constraints: { format: /(json|ics)/ }
+
   scope path: nil, constraints: { format: /.*/ } do
     if Rails.env.development?
       mount Sidekiq::Web => "/sidekiq"
