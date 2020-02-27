@@ -367,10 +367,10 @@ def freeze_time(now = Time.now)
     raise "nested freeze time not supported" if TrackTimeStub.stubbed
   end
 
-  DateTime.stubs(:now).returns(datetime)
-  Time.stubs(:now).returns(time)
-  Date.stubs(:today).returns(datetime.to_date)
-  TrackTimeStub.stubs(:stubbed).returns(true)
+  allow(DateTime).to receive(:now).and_return(datetime)
+  allow(Time).to receive(:now).and_return(time)
+  allow(Date).to receive(:today).and_return(datetime.to_date)
+  allow(TrackTimeStub).to receive(:stubbed).and_return(true)
 
   if block_given?
     begin
@@ -384,10 +384,10 @@ def freeze_time(now = Time.now)
 end
 
 def unfreeze_time
-  DateTime.unstub(:now)
-  Time.unstub(:now)
-  Date.unstub(:today)
-  TrackTimeStub.unstub(:stubbed)
+  allow(DateTime).to receive(:now).and_call_original
+  allow(Time).to receive(:now).and_call_original
+  allow(Date).to receive(:today).and_call_original
+  allow(TrackTimeStub).to receive(:stubbed).and_call_original
 end
 
 def file_from_fixtures(filename, directory = "images")
