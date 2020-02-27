@@ -369,6 +369,8 @@ def freeze_time(now = Time.now)
 
   allow(DateTime).to receive(:now).and_return(datetime)
   allow(Time).to receive(:now).and_return(time)
+  allow(Time).to receive(:new).with(any_args).and_call_original
+  allow(Time).to receive(:new).with(no_args).and_return(time)
   allow(Date).to receive(:today).and_return(datetime.to_date)
   allow(TrackTimeStub).to receive(:stubbed).and_return(true)
 
@@ -386,6 +388,7 @@ end
 def unfreeze_time
   allow(DateTime).to receive(:now).and_call_original
   allow(Time).to receive(:now).and_call_original
+  allow(Time).to receive(:new).and_call_original
   allow(Date).to receive(:today).and_call_original
   allow(TrackTimeStub).to receive(:stubbed).and_call_original
 end
