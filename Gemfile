@@ -165,6 +165,8 @@ group :test, :development do
   # TODO: upgrading to 1.10.1 cause it breaks our test suite.
   # We want our test suite fixed though to support this upgrade.
   gem 'mocha', '1.8.0', require: false
+  gem 'rspec-multi-mock', require: false
+  gem 'rspec-mocks', require: false
 
   gem 'rb-fsevent', require: RUBY_PLATFORM =~ /darwin/i ? 'rb-fsevent' : false
 

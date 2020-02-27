@@ -12,7 +12,6 @@ require 'rbtrace'
 # if you change any configuration or code from libraries loaded here, you'll
 # need to restart spork for it take effect.
 require 'fabrication'
-require 'mocha/api'
 require 'certified'
 require 'webmock/rspec'
 
@@ -44,6 +43,9 @@ end
 ENV["RAILS_ENV"] ||= 'test'
 require File.expand_path("../../config/environment", __FILE__)
 require 'rspec/rails'
+require 'rspec/mocks'
+require 'mocha/api'
+require 'rspec-multi-mock'
 require 'shoulda-matchers'
 require 'sidekiq/testing'
 require 'test_prof/recipes/rspec/let_it_be'
@@ -159,6 +161,23 @@ Time.redefine_singleton_method(:now) do
   at(original_now.call.round)
 end
 
+mock_adapter = MultiMock::Adapter.for(:rspec, :mocha).tap do |mod|
+  # By default RSpec enables both old (:should) and new (:expect)
+  # syntaxes. The old one conflicts with Mocha methods.
+  RSpec::Mocks.configuration.syntax = :expect
+
+  # ...but disabling the old rspec-mocks methods `undef`s
+  # them (including `any_instance`), so then Mocha can't
+  # include its own methods with the same names inside `Class`.
+  # We work around it by manually defining the method on
+  # the Class
+  Class.define_method(:any_instance, ::Mocha::ClassMethods.instance_method(:any_instance))
+
+  # Include Mocha API methods on the adapter, so we can
+  # continue using helpers like `mock`
+  mod.send(:include, Mocha::API)
+end
+
 RSpec.configure do |config|
   config.fail_fast = ENV['RSPEC_FAIL_FAST'] == "1"
   config.silence_filter_announcements = ENV['RSPEC_SILENCE_FILTER_ANNOUNCEMENTS'] == "1"
@@ -168,7 +187,7 @@ RSpec.configure do |config|
   config.include IntegrationHelpers, type: :request
   config.include WebauthnIntegrationHelpers
   config.include SiteSettingsHelpers
-  config.mock_framework = :mocha
+  config.mock_with mock_adapter
   config.order = 'random'
   config.infer_spec_type_from_file_location!
 
