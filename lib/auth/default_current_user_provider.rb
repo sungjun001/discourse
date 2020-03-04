@@ -287,15 +287,8 @@ class Auth::DefaultCurrentUserProvider
     if api_key = ApiKey.active.with_key(api_key_value).includes(:user).first
       api_username = header_api_key? ? @env[HEADER_API_USERNAME] : request[API_USERNAME]
 
-      # Check for deprecated api auth
       if !header_api_key?
-        if request.path == "/admin/email/handle_mail"
-          # Notify admins that the mail receiver is still using query auth and to update
-          AdminDashboardData.add_problem_message('dashboard.update_mail_receiver', 1.day)
-        else
-          # Notify admins of deprecated auth method
-          AdminDashboardData.add_problem_message('dashboard.deprecated_api_usage', 1.day)
-        end
+        raise Discourse::InvalidAccess unless is_whitelisted_query_param_auth_route?(request)
       end
 
       if api_key.allowed_ips.present? && !api_key.allowed_ips.any? { |ip| ip.include?(request.ip) }
@@ -323,6 +316,19 @@ class Auth::DefaultCurrentUserProvider
   end
 
   private
+
+  def is_whitelisted_query_param_auth_route?(request)
+    (is_rss_feed?(request) || is_handle_mail?(request))
+  end
+
+  def is_rss_feed?(request)
+    return true if request.path.match?(/\/(c|t){1}\/\S*.(rss|json)/) && request.get? # topic or category route
+    return true if request.path.match?(/\/(latest|top|categories).(rss|json)/) && request.get? # specific routes with rss
+  end
+
+  def is_handle_mail?(request)
+    return true if request.path == "/admin/email/handle_mail" && request.post?
+  end
 
   def header_api_key?
     !!@env[HEADER_API_KEY]

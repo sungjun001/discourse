@@ -254,9 +254,8 @@ RSpec.describe Admin::UsersController do
       api_key = Fabricate(:api_key, user: user)
 
       put "/posts/#{Fabricate(:post).id}/bookmark.json", params: {
-        bookmarked: "true",
-        api_key: api_key.key
-      }
+        bookmarked: "true"
+      }, headers: { HTTP_API_KEY: api_key.key }
       expect(response.status).to eq(200)
 
       put "/admin/users/#{user.id}/suspend.json", params: suspend_params
@@ -759,8 +758,8 @@ RSpec.describe Admin::UsersController do
 
   describe '#invite_admin' do
     let(:api_key) { Fabricate(:api_key, user: admin) }
-    let(:api_params) do
-      { api_key: api_key.key, api_username: admin.username }
+    let(:headers) do
+      { HTTP_API_KEY: api_key.key, HTTP_API_USERNAME: admin.username }
     end
 
     it "doesn't work when not via API" do
@@ -773,9 +772,9 @@ RSpec.describe Admin::UsersController do
 
     it 'should invite admin' do
       expect do
-        post "/admin/users/invite_admin.json", params: api_params.merge(
+        post "/admin/users/invite_admin.json", params: {
           name: 'Bill', username: 'bill22', email: 'bill@bill.com'
-        )
+        }, headers: headers
       end.to change { Jobs::CriticalUserEmail.jobs.size }.by(1)
 
       expect(response.status).to eq(200)
@@ -790,9 +789,9 @@ RSpec.describe Admin::UsersController do
 
     it "doesn't send the email with send_email falsey" do
       expect do
-        post "/admin/users/invite_admin.json", params: api_params.merge(
+        post "/admin/users/invite_admin.json", params: {
           name: 'Bill', username: 'bill22', email: 'bill@bill.com', send_email: '0'
-        )
+        }, headers: headers
       end.to change { Jobs::CriticalUserEmail.jobs.size }.by(0)
 
       expect(response.status).to eq(200)
