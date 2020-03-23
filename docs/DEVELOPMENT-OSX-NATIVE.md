@@ -231,7 +231,7 @@ npm install -g svgo
 
 ###  Check out the repository
 ```sh
-git clone git@github.com:discourse/discourse.git
+git clone git@github.com:sungjun001/discourse.git
 cd discourse # Navigate into the repository, and stay there for the rest of this how-to
 ```
 ### What about the config files?
